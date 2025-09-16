@@ -97,7 +97,7 @@ async function loadUsers() {
   tbody.innerHTML = `<tr><td colspan="8" class="text-center">${spinnerHTML}Loading...</td></tr>`;
 
   try {
-    const res = await fetch('/get_users');
+    const res = await fetch('/get_user');
     // try to parse json even if !res.ok to get message from backend
     const json = await res.json().catch(() => null);
 
