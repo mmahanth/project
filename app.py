@@ -84,7 +84,7 @@ def create_user():
 
 
 # Get users
-@app.route("/get_users", methods=["GET"])
+@app.route("/get_user", methods=["GET"])
 def get_users():
     employees = Employee.query.order_by(Employee.id.asc()).all()
     return jsonify({"status": "success", "data": [emp.to_dict() for emp in employees]})
@@ -134,3 +134,4 @@ if __name__ == "__main__":
         db.create_all()
     print("Routes:", app.url_map)
     app.run(debug=True)
+
