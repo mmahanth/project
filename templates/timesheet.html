@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Timesheet</title>
+
+  <!-- Bootstrap CSS & JS Bundle -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 220px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      position: fixed;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: 1001;
+      transition: transform 0.3s ease;
+    }
+
+    #sidebar a {
+      color: #bdc3c7;
+      text-decoration: none;
+      padding: 15px 25px;
+      display: flex;
+      align-items: center;
+      border-left: 3px solid transparent;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+
+    #sidebar a i {
+      margin-right: 12px;
+      font-size: 18px;
+      min-width: 18px;
+    }
+
+    #sidebar a.active, #sidebar a:hover {
+      background: #34495e;
+      color: #fff;
+      border-left-color: #3498db;
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 220px;
+      flex: 1;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      min-height: 100vh;
+    }
+
+    /* Timesheet Cards */
+    .timesheet-card {
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .timesheet-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 20px;
+    }
+
+    .time-tracker {
+      background: linear-gradient(145deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .current-time {
+      font-size: 3rem;
+      font-weight: bold;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .time-controls {
+      margin-top: 20px;
+    }
+
+    .btn-time {
+      border-radius: 50px;
+      padding: 15px 30px;
+      font-weight: bold;
+      margin: 0 10px;
+      transition: all 0.3s ease;
+      border: none;
+      color: white;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+    }
+
+    .btn-pause {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+
+    .btn-stop {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+
+    .btn-time:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    /* Period Overview */
+    .period-overview {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .day-card {
+      background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+      border: 1px solid #dee2e6;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    .day-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+    }
+
+    .day-card.active {
+      background: linear-gradient(145deg, #667eea, #764ba2);
+      color: white;
+      border-color: #5a67d8;
+    }
+
+    .hours-display {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .day-card.active .hours-display {
+      color: white;
+    }
+
+    /* Month view styling */
+    .month-day {
+      padding: 10px 5px;
+      min-height: 80px;
+      font-size: 0.85rem;
+    }
+
+    .month-day .hours-display {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* Chart styling */
+    .chart-container {
+      display: flex;
+      align-items: end;
+      height: 100px;
+      border-bottom: 2px solid #dee2e6;
+      padding: 10px;
+      gap: 2px;
+    }
+
+    .chart-bar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      font-size: 0.75rem;
+      padding: 5px 2px;
+      min-height: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .chart-bar:hover {
+      background: linear-gradient(135deg, #5a67d8, #6b46c1);
+      transform: translateY(-2px);
+    }
+
+    .chart-label {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+    }
+
+    .chart-value {
+      font-weight: bold;
+    }
+
+    .summary-stat {
+      padding: 15px;
+    }
+
+    .summary-stat h3 {
+      margin-bottom: 5px;
+    }
+
+    /* Period selector buttons */
+    .btn-outline-primary.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    /* Form Styling */
+    .timesheet-form {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .form-control, .form-select {
+      border-radius: 15px;
+      border: 2px solid #e9ecef;
+      padding: 12px 20px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 15px;
+      padding: 12px 30px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Statistics */
+    .stats-card {
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+      border: none;
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .stats-label {
+      color: #6c757d;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 20px 20px 0 0;
+    }
+
+    /* Alert Styling */
+    .alert {
+      border-radius: 15px;
+      border: none;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+    }
+
+    .alert-success {
+      background: linear-gradient(135deg, #d4edda, #c3e6cb);
+      color: #155724;
+    }
+
+    .alert-danger {
+      background: linear-gradient(135deg, #f8d7da, #f1aeb5);
+      color: #721c24;
+    }
+
+    /* Table Styling */
+    .table {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    .table thead {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+
+      #sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .current-time {
+        font-size: 2rem;
+      }
+
+      .btn-time {
+        margin: 5px;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+      }
+
+      .stats-number {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <a href="{{ url_for('user_dashboard') }}">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('attendees') }}">
+      <i class="fas fa-users"></i>
+      <span>Attendees</span>
+    </a>
+    <a href="{{ url_for('user_details') }}" >
+      <i class="fas fa-file-upload"></i>
+      <span>Update Details</span>
+    </a>
+    <a href="{{ url_for('timesheet') }}"class="active">
+      <i class="fas fa-clock"></i>
+      <span>Timesheet</span>
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container-fluid">
+      <h2 class="mb-4">
+        <i class="fas fa-clock text-primary"></i> My Timesheet
+      </h2>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Period Selector -->
+      <div class="row mb-4">
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-6">
+                  <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt text-primary me-2"></i>{{ period_title or 'This Week' }}
+                    <small class="text-muted ms-2">
+                      {% if start_date and end_date %}
+                        ({{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d, %Y') }})
+                      {% endif %}
+                    </small>
+                  </h5>
+                </div>
+                <div class="col-md-6">
+                  <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <a href="{{ url_for('timesheet', period='current_week') }}"
+                       class="btn btn-sm {{ 'btn-primary' if period == 'current_week' or not period else 'btn-outline-primary' }}">
+                      <i class="fas fa-calendar-week me-1"></i>This Week
+                    </a>
+                    <a href="{{ url_for('timesheet', period='last_week') }}"
+                       class="btn btn-sm {{ 'btn-primary' if period == 'last_week' else 'btn-outline-primary' }}">
+                      <i class="fas fa-calendar-minus me-1"></i>Last Week
+                    </a>
+                    <a href="{{ url_for('timesheet', period='current_month') }}"
+                       class="btn btn-sm {{ 'btn-primary' if period == 'current_month' else 'btn-outline-primary' }}">
+                      <i class="fas fa-calendar me-1"></i>This Month
+                    </a>
+                    <a href="{{ url_for('timesheet', period='last_month') }}"
+                       class="btn btn-sm {{ 'btn-primary' if period == 'last_month' else 'btn-outline-primary' }}">
+                      <i class="fas fa-history me-1"></i>Last Month
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <!-- Quick Stats Summary -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <div class="row g-0">
+                <div class="col">
+                  <h6 class="text-primary mb-1">{{ total_hours or 0 }}</h6>
+                  <small class="text-muted">Total Hours</small>
+                </div>
+                <div class="col">
+                  <h6 class="text-success mb-1">{{ days_worked or 0 }}</h6>
+                  <small class="text-muted">Days Worked</small>
+                </div>
+                <div class="col">
+                  <h6 class="text-info mb-1">{{ avg_working_day_hours or 0 }}</h6>
+                  <small class="text-muted">Avg/Day</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Time Tracker - Only show for current period -->
+      {% if not period or period == 'current_week' or period == 'current_month' %}
+      <div class="time-tracker">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <h4><i class="fas fa-stopwatch"></i> Current Time</h4>
+            <div class="current-time" id="currentTime"></div>
+            <p class="mb-0">{{ today_date or 'Monday, September 22, 2025' }}</p>
+          </div>
+          <div class="col-md-6">
+            <div class="time-controls">
+              <button class="btn btn-time btn-start" onclick="startTimer()">
+                <i class="fas fa-play"></i> Start
+              </button>
+              <button class="btn btn-time btn-pause" onclick="pauseTimer()">
+                <i class="fas fa-pause"></i> Break
+              </button>
+              <button class="btn btn-time btn-stop" onclick="stopTimer()">
+                <i class="fas fa-stop"></i> End Day
+              </button>
+            </div>
+            <div class="mt-3">
+              <p class="mb-1">Today's Hours: <strong id="todayHours">0:00</strong></p>
+              <p class="mb-0">Status: <span class="badge bg-light text-dark" id="workStatus">Not Started</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="row">
+        <!-- Period Overview -->
+        <div class="col-lg-8">
+          <div class="period-overview">
+            <h4 class="mb-4">
+              <i class="fas fa-calendar-week text-primary"></i> {{ period_title or 'This Week' }} Overview
+            </h4>
+
+            {% if period in ['current_week', 'last_week'] or not period %}
+              <!-- Week View -->
+              <div class="row g-2">
+                {% if period_days %}
+                  {% for day in period_days %}
+                  <div class="col">
+                    <div class="day-card" data-date="{{ day.date_str }}" onclick="selectDay('{{ day.date_str }}')">
+                      <h6 class="mb-2">{{ day.day_name }}</h6>
+                      <p class="mb-1">{{ day.day_number }}</p>
+                      <div class="hours-display">
+                        {{ day.timesheet.total_hours if day.timesheet else '0.0' }}h
+                      </div>
+                      <small class="text-muted">
+                        {% if day.timesheet %}
+                          {{ day.timesheet.start_time.strftime('%H:%M') if day.timesheet.start_time else '--:--' }} -
+                          {{ day.timesheet.end_time.strftime('%H:%M') if day.timesheet.end_time else '--:--' }}
+                        {% else %}
+                          Not logged
+                        {% endif %}
+                      </small>
+                    </div>
+                  </div>
+                  {% endfor %}
+                {% else %}
+                  <!-- Fallback if period_days is not available -->
+                  <div class="col-12">
+                    <p class="text-center text-muted">Weekly data loading...</p>
+                  </div>
+                {% endif %}
+              </div>
+            {% else %}
+              <!-- Month View -->
+              <div class="row g-1">
+                {% if period_days %}
+                  {% set week_count = namespace(value=0) %}
+                  {% for day in period_days %}
+                    {% if loop.index0 % 7 == 0 %}
+                      {% if week_count.value > 0 %}
+                        </div> <!-- End previous week row -->
+                      {% endif %}
+                      <div class="row g-1 mb-1"> <!-- Start new week row -->
+                      {% set week_count.value = week_count.value + 1 %}
+                    {% endif %}
+
+                    <div class="col">
+                      <div class="day-card month-day {{ 'active' if day.timesheet else '' }}"
+                           data-date="{{ day.date_str }}" onclick="selectDay('{{ day.date_str }}')">
+                        <small class="mb-1">{{ day.day_name }}</small>
+                        <p class="mb-1"><strong>{{ day.day_number }}</strong></p>
+                        <div class="hours-display small">
+                          {{ day.timesheet.total_hours if day.timesheet else '0' }}h
+                        </div>
+                      </div>
+                    </div>
+
+                    {% if loop.last %}
+                      </div> <!-- Close last week row -->
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  <div class="col-12">
+                    <p class="text-center text-muted">Monthly data loading...</p>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Period Summary Chart -->
+          <div class="timesheet-card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-line"></i> {{ period_title or 'This Week' }} Summary
+              </h5>
+            </div>
+            <div class="card-body">
+              {% if timesheets %}
+                <div class="row text-center">
+                  <div class="col-md-3">
+                    <div class="summary-stat">
+                      <h3 class="text-primary">{{ total_hours or 0 }}</h3>
+                      <p class="text-muted mb-0">Total Hours</p>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="summary-stat">
+                      <h3 class="text-success">{{ days_worked or 0 }}</h3>
+                      <p class="text-muted mb-0">Days Worked</p>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="summary-stat">
+                      <h3 class="text-info">{{ avg_working_day_hours or 0 }}</h3>
+                      <p class="text-muted mb-0">Avg Per Working Day</p>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="summary-stat">
+                      <h3 class="text-warning">{{ ((total_hours or 0) / 40 * 100)|round(1) }}%</h3>
+                      <p class="text-muted mb-0">Of 40hr Week</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Simple visual chart -->
+                {% if period_days %}
+                <div class="mt-4">
+                  <h6>Daily Hours Chart</h6>
+                  <div class="chart-container">
+                    {% for day in period_days %}
+                      {% if day.timesheet and day.timesheet.total_hours %}
+                        <div class="chart-bar" style="height: {{ ((day.timesheet.total_hours / 10) * 100)|round }}px; width: {{ 100 / period_days|length }}%;">
+                          <div class="chart-value">{{ day.timesheet.total_hours }}h</div>
+                          <div class="chart-label">{{ day.day_name[:3] }}</div>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+              {% else %}
+                <div class="text-center text-muted">
+                  <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                  <h5>No timesheets found for {{ period_title or 'this period' }}</h5>
+                  <p>Start tracking your time to see summaries here.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Timesheets Table -->
+          <div class="timesheet-card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-history"></i> {{ period_title or 'This Week' }} Entries
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Start</th>
+                      <th>End</th>
+                      <th>Hours</th>
+                      <th>Project</th>
+                      <th>Status</th>
+                      {% if not period or period in ['current_week', 'current_month'] %}
+                        <th>Actions</th>
+                      {% endif %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for timesheet in timesheets %}
+                    <tr>
+                      <td>{{ timesheet.date.strftime('%m/%d/%Y') }}</td>
+                      <td>{{ timesheet.start_time.strftime('%H:%M') if timesheet.start_time else '--:--' }}</td>
+                      <td>{{ timesheet.end_time.strftime('%H:%M') if timesheet.end_time else '--:--' }}</td>
+                      <td><strong>{{ timesheet.total_hours or '0.0' }}h</strong></td>
+                      <td>{{ timesheet.project_name or 'General' }}</td>
+                      <td>
+                        <span class="badge bg-{{ 'success' if timesheet.status == 'completed' else 'warning' }}">
+                          {{ timesheet.status.title() }}
+                        </span>
+                      </td>
+                      {% if not period or period in ['current_week', 'current_month'] %}
+                        <td>
+                          <button class="btn btn-sm btn-outline-primary" onclick="editTimesheet({{ timesheet.id }})">
+                            <i class="fas fa-edit"></i>
+                          </button>
+                          <button class="btn btn-sm btn-outline-danger" onclick="deleteTimesheet({{ timesheet.id }})">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      {% endif %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                      <td colspan="{{ '7' if not period or period in ['current_week', 'current_month'] else '6' }}" class="text-center text-muted">
+                        No timesheet entries found for {{ period_title or 'this period' }}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats & Quick Entry -->
+        <div class="col-lg-4">
+          <!-- Stats Cards -->
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <div class="stats-card">
+                <div class="stats-number" id="weekHours">{{ total_hours or 0 }}</div>
+                <div class="stats-label">Total Hours</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stats-card">
+                <div class="stats-number" id="avgDaily">{{ avg_daily_hours or 0 }}</div>
+                <div class="stats-label">Avg Daily</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Entry Form - Only show for current periods -->
+          {% if not period or period in ['current_week', 'current_month'] %}
+          <div class="timesheet-form">
+            <h5 class="mb-4">
+              <i class="fas fa-plus-circle text-primary"></i> Quick Entry
+            </h5>
+            <form id="timesheetForm">
+              <div class="mb-3">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" id="entryDate" name="date" required>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-6">
+                  <label class="form-label">Start Time</label>
+                  <input type="time" class="form-control" id="startTime" name="start_time" required>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">End Time</label>
+                  <input type="time" class="form-control" id="endTime" name="end_time" required>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Break Duration (minutes)</label>
+                <input type="number" class="form-control" id="breakDuration" name="break_duration" value="0" min="0">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Project/Task</label>
+                <input type="text" class="form-control" id="projectName" name="project_name" placeholder="Enter project name">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="taskDescription" name="task_description" rows="3" placeholder="What did you work on?"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-save"></i> Save Entry
+              </button>
+            </form>
+          </div>
+          {% else %}
+          <!-- Historical View Message -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <i class="fas fa-history fa-3x text-muted mb-3"></i>
+              <h6 class="text-muted">Historical View</h6>
+              <p class="text-muted mb-0">You're viewing past timesheet data. To add new entries, switch to current week or month.</p>
+              <div class="mt-3">
+                <a href="{{ url_for('timesheet', period='current_week') }}" class="btn btn-primary btn-sm">
+                  <i class="fas fa-plus me-1"></i>Add New Entry
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Timesheet Entry</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <input type="hidden" id="editTimesheetId">
+            <div class="mb-3">
+              <label class="form-label">Start Time</label>
+              <input type="time" class="form-control" id="editStartTime" name="start_time" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">End Time</label>
+              <input type="time" class="form-control" id="editEndTime" name="end_time" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Break Duration (minutes)</label>
+              <input type="number" class="form-control" id="editBreakDuration" name="break_duration" value="0">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Project/Task</label>
+              <input type="text" class="form-control" id="editProjectName" name="project_name">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" id="editTaskDescription" name="task_description" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="updateTimesheet()">Update Entry</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  // Real-time clock
+  function updateClock() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    const clockElement = document.getElementById('currentTime');
+    if (clockElement) {
+      clockElement.textContent = timeString;
+    }
+  }
+
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Set today's date as default
+  const entryDateElement = document.getElementById('entryDate');
+  if (entryDateElement) {
+    entryDateElement.valueAsDate = new Date();
+  }
+
+  // Timer functionality
+  let isTimerRunning = false;
+  let startTime = null;
+  let totalMinutes = 0;
+  let timerInterval = null;
+
+  function startTimer() {
+    if (!isTimerRunning) {
+      isTimerRunning = true;
+      startTime = new Date();
+      const workStatus = document.getElementById('workStatus');
+      if (workStatus) {
+        workStatus.textContent = 'Working';
+        workStatus.className = 'badge bg-success';
+      }
+
+      // Set start time in form
+      const now = new Date();
+      const startTimeElement = document.getElementById('startTime');
+      if (startTimeElement) {
+        startTimeElement.value = now.toTimeString().substr(0,5);
+      }
+
+      // Start tracking today's hours
+      updateTodayHours();
+      timerInterval = setInterval(updateTodayHours, 60000); // Update every minute
+    }
+  }
+
+  function pauseTimer() {
+    if (isTimerRunning) {
+      isTimerRunning = false;
+      const workStatus = document.getElementById('workStatus');
+      if (workStatus) {
+        workStatus.textContent = 'On Break';
+        workStatus.className = 'badge bg-warning';
+      }
+
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    }
+  }
+
+  function stopTimer() {
+    if (isTimerRunning) {
+      isTimerRunning = false;
+      const now = new Date();
+      const endTimeElement = document.getElementById('endTime');
+      if (endTimeElement) {
+        endTimeElement.value = now.toTimeString().substr(0,5);
+      }
+
+      const workStatus = document.getElementById('workStatus');
+      if (workStatus) {
+        workStatus.textContent = 'Day Ended';
+        workStatus.className = 'badge bg-danger';
+      }
+
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    }
+  }
+
+  function updateTodayHours() {
+    if (isTimerRunning && startTime) {
+      const now = new Date();
+      const diffMs = now - startTime;
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const todayHours = document.getElementById('todayHours');
+      if (todayHours) {
+        todayHours.textContent = `${diffHours}:${diffMinutes.toString().padStart(2, '0')}`;
+      }
+    }
+  }
+
+  // Form submission with better error handling
+  const timesheetForm = document.getElementById('timesheetForm');
+  if (timesheetForm) {
+    timesheetForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+
+      // Validate form data
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
+
+      if (!startTime || !endTime) {
+        showAlert('Please enter both start and end times', 'error');
+        return;
+      }
+
+      // Check if end time is after start time
+      if (startTime >= endTime) {
+        showAlert('End time must be after start time', 'error');
+        return;
+      }
+
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      submitBtn.disabled = true;
+
+      const formData = {
+        date: document.getElementById('entryDate').value,
+        start_time: startTime,
+        end_time: endTime,
+        break_duration: document.getElementById('breakDuration').value || 0,
+        project_name: document.getElementById('projectName').value.trim(),
+        task_description: document.getElementById('taskDescription').value.trim(),
+        status: 'completed'
+      };
+
+      fetch('/api/timesheet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+
+        if (data.success) {
+          showAlert('Timesheet entry added successfully!', 'success');
+          // Reset form
+          timesheetForm.reset();
+          document.getElementById('entryDate').valueAsDate = new Date();
+          // Reload after a short delay to show the success message
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
+        } else {
+          showAlert('Error: ' + data.message, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        showAlert('An error occurred while saving the timesheet entry.', 'error');
+      });
+    });
+  }
+
+  // Enhanced edit function to load existing data
+  function editTimesheet(id) {
+    // Show loading state
+    const loadingHtml = `
+      <div class="text-center py-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading timesheet data...</p>
+      </div>
+    `;
+
+    // Show modal with loading state
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    document.querySelector('#editModal .modal-body').innerHTML = loadingHtml;
+    editModal.show();
+
+    // Fetch timesheet data
+    fetch(`/api/timesheet/${id}`)
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          const data = result.data;
+
+          // Restore original modal content
+          document.querySelector('#editModal .modal-body').innerHTML = `
+            <form id="editForm">
+              <input type="hidden" id="editTimesheetId" value="${id}">
+              <div class="mb-3">
+                <label class="form-label">Start Time</label>
+                <input type="time" class="form-control" id="editStartTime" name="start_time" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">End Time</label>
+                <input type="time" class="form-control" id="editEndTime" name="end_time" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Break Duration (minutes)</label>
+                <input type="number" class="form-control" id="editBreakDuration" name="break_duration" value="0" min="0">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Project/Task</label>
+                <input type="text" class="form-control" id="editProjectName" name="project_name">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="editTaskDescription" name="task_description" rows="3"></textarea>
+              </div>
+            </form>
+          `;
+
+          // Populate form fields
+          document.getElementById('editTimesheetId').value = id;
+          document.getElementById('editStartTime').value = data.start_time || '';
+          document.getElementById('editEndTime').value = data.end_time || '';
+          document.getElementById('editBreakDuration').value = data.break_duration || 0;
+          document.getElementById('editProjectName').value = data.project_name || '';
+          document.getElementById('editTaskDescription').value = data.task_description || '';
+
+        } else {
+          showAlert('Error: ' + result.message, 'error');
+          editModal.hide();
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showAlert('Failed to load timesheet data', 'error');
+        editModal.hide();
+      });
+  }
+
+  function updateTimesheet() {
+    const id = document.getElementById('editTimesheetId').value;
+    const startTime = document.getElementById('editStartTime').value;
+    const endTime = document.getElementById('editEndTime').value;
+
+    // Validate form data
+    if (!startTime || !endTime) {
+      showAlert('Please enter both start and end times', 'error');
+      return;
+    }
+
+    if (startTime >= endTime) {
+      showAlert('End time must be after start time', 'error');
+      return;
+    }
+
+    const formData = {
+      start_time: startTime,
+      end_time: endTime,
+      break_duration: document.getElementById('editBreakDuration').value || 0,
+      project_name: document.getElementById('editProjectName').value.trim(),
+      task_description: document.getElementById('editTaskDescription').value.trim(),
+      status: 'completed'
+    };
+
+    // Show loading state on update button
+    const updateBtn = document.querySelector('#editModal .btn-primary');
+    const originalBtnText = updateBtn.innerHTML;
+    updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    updateBtn.disabled = true;
+
+    fetch(`/api/timesheet/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+      updateBtn.innerHTML = originalBtnText;
+      updateBtn.disabled = false;
+
+      if (data.success) {
+        showAlert('Timesheet entry updated successfully!', 'success');
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+        // Reload after a short delay
+        setTimeout(() => {
+          location.reload();
+        }, 1500);
+      } else {
+        showAlert('Error: ' + data.message, 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      updateBtn.innerHTML = originalBtnText;
+      updateBtn.disabled = false;
+      showAlert('An error occurred while updating the timesheet entry.', 'error');
+    });
+  }
+
+  function deleteTimesheet(id) {
+    if (confirm('Are you sure you want to delete this timesheet entry? This action cannot be undone.')) {
+      fetch(`/api/timesheet/${id}`, {
+        method: 'DELETE'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showAlert('Timesheet entry deleted successfully!', 'success');
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
+        } else {
+          showAlert('Error: ' + data.message, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showAlert('An error occurred while deleting the timesheet entry.', 'error');
+      });
+    }
+  }
+
+  function selectDay(date) {
+    const entryDate = document.getElementById('entryDate');
+    if (entryDate) {
+      entryDate.value = date;
+    }
+
+    // Update active day card
+    document.querySelectorAll('.day-card').forEach(card => {
+      card.classList.remove('active');
+    });
+    const selectedCard = document.querySelector(`[data-date="${date}"]`);
+    if (selectedCard) {
+      selectedCard.classList.add('active');
+    }
+  }
+
+  // Improved alert function
+  function showAlert(message, type) {
+    // Remove existing alerts
+    const existingAlerts = document.querySelectorAll('.custom-alert');
+    existingAlerts.forEach(alert => alert.remove());
+
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+
+    const alertHtml = `
+      <div class="alert ${alertClass} alert-dismissible fade show custom-alert"
+           style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+        <i class="fas ${iconClass} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      const alert = document.querySelector('.custom-alert');
+      if (alert) {
+        alert.remove();
+      }
+    }, 5000);
+  }
+
+  // Mobile sidebar toggle
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('show');
+  }
+
+  // Add mobile menu button if needed
+  if (window.innerWidth <= 768) {
+    const header = document.createElement('div');
+    header.innerHTML = `
+      <button class="btn btn-primary d-md-none" onclick="toggleSidebar()" style="position: fixed; top: 10px; left: 10px; z-index: 1002;">
+        <i class="fas fa-bars"></i>
+      </button>
+    `;
+    document.body.appendChild(header);
+  }
+
+  // Period navigation with keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+      switch(e.key) {
+        case '1':
+          e.preventDefault();
+          window.location.href = "{{ url_for('timesheet', period='current_week') }}";
+          break;
+        case '2':
+          e.preventDefault();
+          window.location.href = "{{ url_for('timesheet', period='last_week') }}";
+          break;
+        case '3':
+          e.preventDefault();
+          window.location.href = "{{ url_for('timesheet', period='current_month') }}";
+          break;
+        case '4':
+          e.preventDefault();
+          window.location.href = "{{ url_for('timesheet', period='last_month') }}";
+          break;
+        case 's':
+          e.preventDefault();
+          if (timesheetForm) {
+            timesheetForm.dispatchEvent(new Event('submit'));
+          }
+          break;
+      }
+    }
+
+    // Escape to close modal
+    if (e.key === 'Escape') {
+      const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+      if (modal) {
+        modal.hide();
+      }
+    }
+  });
+
+  // Auto-save draft functionality (optional)
+  let draftSaveTimeout;
+  const formInputs = ['startTime', 'endTime', 'breakDuration', 'projectName', 'taskDescription'];
+
+  formInputs.forEach(inputId => {
+    const element = document.getElementById(inputId);
+    if (element) {
+      element.addEventListener('input', function() {
+        clearTimeout(draftSaveTimeout);
+        draftSaveTimeout = setTimeout(saveDraft, 2000); // Save draft after 2 seconds of inactivity
+      });
+    }
+  });
+
+  function saveDraft() {
+    const entryDate = document.getElementById('entryDate');
+    const startTime = document.getElementById('startTime');
+    const endTime = document.getElementById('endTime');
+    const breakDuration = document.getElementById('breakDuration');
+    const projectName = document.getElementById('projectName');
+    const taskDescription = document.getElementById('taskDescription');
+
+    if (entryDate && startTime && endTime && breakDuration && projectName && taskDescription) {
+      const draftData = {
+        date: entryDate.value,
+        start_time: startTime.value,
+        end_time: endTime.value,
+        break_duration: breakDuration.value,
+        project_name: projectName.value,
+        task_description: taskDescription.value
+      };
+
+      localStorage.setItem('timesheet_draft', JSON.stringify(draftData));
+    }
+  }
+
+  function loadDraft() {
+    const draftData = localStorage.getItem('timesheet_draft');
+    if (draftData) {
+      try {
+        const data = JSON.parse(draftData);
+        // Only load if the draft is for today
+        if (data.date === new Date().toISOString().split('T')[0]) {
+          const startTime = document.getElementById('startTime');
+          const endTime = document.getElementById('endTime');
+          const breakDuration = document.getElementById('breakDuration');
+          const projectName = document.getElementById('projectName');
+          const taskDescription = document.getElementById('taskDescription');
+
+          if (data.start_time && startTime) startTime.value = data.start_time;
+          if (data.end_time && endTime) endTime.value = data.end_time;
+          if (data.break_duration && breakDuration) breakDuration.value = data.break_duration;
+          if (data.project_name && projectName) projectName.value = data.project_name;
+          if (data.task_description && taskDescription) taskDescription.value = data.task_description;
+        }
+      } catch (e) {
+        console.log('Failed to load draft data');
+      }
+    }
+  }
+
+  // Load draft on page load
+  loadDraft();
+
+  // Clear draft after successful submission
+  document.addEventListener('timesheetSaved', function() {
+    localStorage.removeItem('timesheet_draft');
+  });
+</script>
+</body>
+</html>

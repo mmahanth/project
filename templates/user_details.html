@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Update Your Details</title>
+
+  <!-- Bootstrap CSS & JS Bundle -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 220px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      position: fixed;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: 1001;
+      transition: transform 0.3s ease;
+    }
+
+    #sidebar a {
+      color: #bdc3c7;
+      text-decoration: none;
+      padding: 15px 25px;
+      display: flex;
+      align-items: center;
+      border-left: 3px solid transparent;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+
+    #sidebar a i {
+      margin-right: 12px;
+      font-size: 18px;
+      min-width: 18px;
+    }
+
+    #sidebar a.active, #sidebar a:hover {
+      background: #34495e;
+      color: #fff;
+      border-left-color: #3498db;
+    }
+
+    /* Logout specific styling */
+    .logout-link {
+      color: #e74c3c !important;
+      margin-top: auto;
+      border-top: 1px solid #34495e;
+    }
+
+    .logout-link:hover {
+      background: #e74c3c !important;
+      color: white !important;
+      border-left-color: #c0392b !important;
+    }
+
+    /* Main content - WIDER */
+    .main-content {
+      margin-left: 220px;
+      flex: 1;
+      padding: 30px 40px;
+      background: rgba(255, 255, 255, 0.95);
+      min-height: 100vh;
+    }
+
+    /* Container - MUCH WIDER */
+    .content-container {
+      width: 100%;
+      max-width: 1400px; /* Increased from 800px */
+      margin: 0 auto;
+    }
+
+    /* Cards - WIDER */
+    .details-card {
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      overflow: hidden;
+      margin-bottom: 30px;
+      width: 100%;
+    }
+
+    .details-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 25px 35px; /* Increased padding */
+    }
+
+    .card-body {
+      padding: 35px; /* Increased padding */
+    }
+
+    /* Form Styling - WIDER */
+    .form-control {
+      border-radius: 15px;
+      border: 2px solid #e9ecef;
+      padding: 15px 25px; /* Increased padding */
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+      font-size: 1.1rem; /* Larger font */
+    }
+
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 15px;
+      padding: 15px 35px; /* Increased padding */
+      font-weight: bold;
+      transition: all 0.3s ease;
+      font-size: 1.1rem; /* Larger font */
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    /* File item styling - WIDER */
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 25px 0; /* Increased padding */
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .file-item:last-child {
+      border-bottom: none;
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+
+    .file-info i {
+      margin-right: 20px; /* Increased margin */
+      font-size: 2.5rem; /* Larger icon */
+      width: 50px; /* Wider space */
+      text-align: center;
+    }
+
+    .file-details h6 {
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 1.2rem; /* Larger font */
+    }
+
+    .file-details small {
+      color: #6c757d;
+      font-size: 1rem; /* Larger small text */
+    }
+
+    .file-actions a, .file-actions span {
+      padding: 12px 25px; /* Increased padding */
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 1rem; /* Larger font */
+      font-weight: 500;
+      display: inline-block;
+      margin-left: 15px; /* Increased margin */
+    }
+
+    .file-actions a {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .file-actions a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      color: white;
+    }
+
+    .file-actions span {
+      background: #f8f9fa;
+      color: #6c757d;
+      border: 1px solid #dee2e6;
+    }
+
+    /* Form sections - WIDER LAYOUT */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* Two columns */
+      gap: 40px; /* Space between columns */
+      margin-bottom: 30px;
+    }
+
+    .form-section {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 15px;
+      border: 2px solid #e9ecef;
+    }
+
+    .form-section h6 {
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: #495057;
+      font-size: 1.1rem;
+    }
+
+    /* Upload Progress */
+    .upload-progress {
+      margin-top: 25px;
+      display: none;
+    }
+
+    .progress {
+      height: 12px; /* Thicker progress bar */
+      border-radius: 10px;
+      background: #e9ecef;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      transition: width 0.3s ease;
+    }
+
+    /* Alert Styling */
+    .alert {
+      border: none;
+      border-radius: 15px;
+      padding: 20px 25px; /* Increased padding */
+      margin-bottom: 30px;
+      font-weight: 500;
+      font-size: 1.05rem; /* Larger font */
+    }
+
+    .alert-success {
+      background: linear-gradient(135deg, #d4edda, #c3e6cb);
+      color: #155724;
+    }
+
+    .alert-danger {
+      background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+      color: #721c24;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 20px 20px 0 0;
+    }
+
+    /* Back button */
+    .back-button {
+      background: linear-gradient(135deg, #6c757d, #495057);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      padding: 15px 30px; /* Increased padding */
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      font-size: 1.1rem; /* Larger font */
+    }
+
+    .back-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
+      color: white;
+    }
+
+    /* Title styling */
+    .page-title {
+      font-size: 2.5rem; /* Larger title */
+      margin-bottom: 40px;
+      font-weight: bold;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .form-row {
+        grid-template-columns: 1fr; /* Single column on smaller screens */
+        gap: 25px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+
+      #sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .content-container {
+        max-width: 100%;
+      }
+
+      .card-body {
+        padding: 20px;
+      }
+
+      .page-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <a href="{{ url_for('user_dashboard') }}">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('attendees') }}">
+      <i class="fas fa-users"></i>
+      <span>Attendees</span>
+    </a>
+    <a href="{{ url_for('user_details') }}"class="active">
+      <i class="fas fa-file-upload"></i>
+      <span>Update Details</span>
+    </a>
+    <a href="{{ url_for('timesheet') }}">
+      <i class="fas fa-clock"></i>
+      <span>Timesheet</span>
+    </a>
+
+    <!-- Settings Section -->
+    <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #34495e;">
+      <a href="#" onclick="openResetModal()">
+        <i class="fas fa-key"></i>
+        <span>Change Password</span>
+      </a>
+      <a href="{{ url_for('logout') }}" onclick="return confirmLogout()" class="logout-link">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="content-container">
+
+      <div class="text-center mb-5">
+        <h1 class="page-title">
+          <i class="fas fa-file-upload text-primary"></i> Update Your Details
+        </h1>
+      </div>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+              <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-3"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Current Files Display - TOP SECTION -->
+      {% if employee %}
+      <div class="details-card">
+        <div class="card-header">
+          <h4 class="mb-0">
+            <i class="fas fa-folder-open me-3"></i> Current Files
+          </h4>
+        </div>
+        <div class="card-body">
+
+          <div class="file-item">
+            <div class="file-info">
+              <i class="fas fa-user-circle text-info"></i>
+              <div class="file-details">
+                <h6>Profile Image</h6>
+                <small class="text-muted">Your profile picture for the system</small>
+              </div>
+            </div>
+            <div class="file-actions">
+              {% if employee.image_file_id %}
+                <a href="{{ url_for('serve_file', file_id=employee.image_file_id) }}" target="_blank">
+                  <i class="fas fa-eye me-2"></i>View Image
+                </a>
+              {% else %}
+                <span>Not uploaded</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="file-item">
+            <div class="file-info">
+              <i class="fas fa-file-pdf text-danger"></i>
+              <div class="file-details">
+                <h6>CV/Resume</h6>
+                <small class="text-muted">Your complete resume document</small>
+              </div>
+            </div>
+            <div class="file-actions">
+              {% if employee.cv_file_id %}
+                <a href="{{ url_for('serve_file', file_id=employee.cv_file_id) }}" target="_blank">
+                  <i class="fas fa-download me-2"></i>Download PDF
+                </a>
+              {% else %}
+                <span>Not uploaded</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="file-item">
+            <div class="file-info">
+              <i class="fas fa-file-alt text-success"></i>
+              <div class="file-details">
+                <h6>Other Documents</h6>
+                <small class="text-muted">Certificates, qualifications, and additional files</small>
+              </div>
+            </div>
+            <div class="file-actions">
+              {% if employee.other_file_id %}
+                {% set other_files = employee.get_other_files() %}
+                {% if other_files %}
+                  {% for file_id in other_files %}
+                    <a href="{{ url_for('serve_file', file_id=file_id) }}" target="_blank" class="mb-2 me-2">
+                      <i class="fas fa-download me-2"></i>Document {{ loop.index }}
+                    </a>
+                  {% endfor %}
+                {% else %}
+                  <span>Not uploaded</span>
+                {% endif %}
+              {% else %}
+                <span>Not uploaded</span>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Upload Form - BOTTOM SECTION -->
+      <div class="details-card">
+        <div class="card-header">
+          <h4 class="mb-0">
+            <i class="fas fa-upload me-3"></i> Upload New Files
+          </h4>
+        </div>
+        <div class="card-body">
+          <form id="uploadForm" method="POST" action="{{ url_for('upload_files', emp_id=employee.emp_id) }}" enctype="multipart/form-data">
+
+            <!-- Two Column Layout for Form -->
+            <div class="form-row">
+
+              <!-- Left Column -->
+              <div class="form-section">
+                <h6><i class="fas fa-user-circle text-info me-2"></i>Profile & Resume</h6>
+
+                <div class="mb-4">
+                  <label class="form-label fw-bold">Profile Image</label>
+                  <input type="file" class="form-control" name="profile_img" accept=".jpg,.jpeg,.png">
+                  <div class="form-text">Accepted formats: JPG, JPEG, PNG (Max 5MB)</div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label fw-bold">CV/Resume</label>
+                  <input type="file" class="form-control" name="cv" accept=".pdf">
+                  <div class="form-text">PDF format only (Max 10MB)</div>
+                </div>
+              </div>
+
+              <!-- Right Column -->
+              <div class="form-section">
+                <h6><i class="fas fa-file-alt text-success me-2"></i>Additional Documents</h6>
+
+                <div class="mb-4">
+                  <label class="form-label fw-bold">Other Documents</label>
+                  <input type="file" class="form-control" name="other_docs[]"
+                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+                  <div class="form-text">Multiple files allowed<br>
+                    <strong>Formats:</strong> PDF, DOC, DOCX, JPG, PNG<br>
+                    <strong>Examples:</strong> Certificates, qualifications, ID proof</div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="upload-progress" id="uploadProgress">
+              <div class="mb-3">
+                <h6 class="text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Uploading files...</h6>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">
+                <i class="fas fa-upload me-2"></i>Update All Files
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Back to Dashboard -->
+      <div class="text-center mt-5">
+        <a href="{{ url_for('user_dashboard') }}" class="back-button">
+          <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Change Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="passwordResetForm">
+            <div class="mb-3">
+              <label class="form-label">Current Password</label>
+              <input type="password" class="form-control" name="current_password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">New Password</label>
+              <input type="password" class="form-control" name="new_password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" name="confirm_password" required>
+            </div>
+            <div id="resetMsg"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitPasswordChange()">Change Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    // Mobile sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('show');
+    }
+
+    // Password reset modal
+    function openResetModal() {
+      const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+      modal.show();
+    }
+
+    function submitPasswordChange() {
+      const form = document.getElementById('passwordResetForm');
+      const formData = new FormData(form);
+
+      const data = {
+        current_password: formData.get('current_password'),
+        new_password: formData.get('new_password'),
+        confirm_password: formData.get('confirm_password')
+      };
+
+      if (data.new_password !== data.confirm_password) {
+        document.getElementById('resetMsg').innerHTML = '<div class="alert alert-danger">Passwords do not match!</div>';
+        return;
+      }
+
+      fetch('/api/change_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(async (response) => {
+        const result = await response.json();
+        const msgDiv = document.getElementById('resetMsg');
+
+        if (response.ok) {
+          msgDiv.innerHTML = '<div class="alert alert-success">' + result.message + '</div>';
+          form.reset();
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal')).hide();
+          }, 2000);
+        } else {
+          msgDiv.innerHTML = '<div class="alert alert-danger">' + (result.message || 'Error occurred') + '</div>';
+        }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        document.getElementById('resetMsg').innerHTML = '<div class="alert alert-danger">An unexpected error occurred.</div>';
+      });
+    }
+
+    // Logout confirmation
+    function confirmLogout() {
+      return confirm('Are you sure you want to logout?');
+    }
+
+    // Form submission with progress
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const hasFiles = formData.get('profile_img').size > 0 ||
+                      formData.get('cv').size > 0 ||
+                      formData.getAll('other_docs[]').some(file => file.size > 0);
+
+      if (!hasFiles) {
+        alert('Please select at least one file to upload.');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      const uploadProgress = document.getElementById('uploadProgress');
+      const progressBar = document.getElementById('progressBar');
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading Files...';
+      uploadProgress.style.display = 'block';
+
+      // Simulate progress
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 20;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+      }, 200);
+
+      fetch(this.action, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+
+        if (response.ok) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        } else {
+          throw new Error('Upload failed');
+        }
+      })
+      .catch(error => {
+        clearInterval(progressInterval);
+        uploadProgress.style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Update All Files';
+        alert('Upload failed. Please try again.');
+      });
+    });
+
+    // Add mobile menu button if needed
+    if (window.innerWidth <= 768) {
+      const header = document.createElement('div');
+      header.innerHTML = `
+        <button class="btn btn-primary d-md-none" onclick="toggleSidebar()" style="position: fixed; top: 10px; left: 10px; z-index: 1002;">
+          <i class="fas fa-bars"></i>
+        </button>
+      `;
+      document.body.appendChild(header);
+    }
+  </script>
+
+</body>
+</html>

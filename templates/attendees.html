@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Attendees</title>
+
+  <!-- Bootstrap CSS & JS Bundle -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 220px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      position: fixed;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: 1001;
+      transition: transform 0.3s ease;
+    }
+
+    #sidebar a {
+      color: #bdc3c7;
+      text-decoration: none;
+      padding: 15px 25px;
+      display: flex;
+      align-items: center;
+      border-left: 3px solid transparent;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+
+    #sidebar a i {
+      margin-right: 12px;
+      font-size: 18px;
+      min-width: 18px;
+    }
+
+    #sidebar a.active, #sidebar a:hover {
+      background: #34495e;
+      color: #fff;
+      border-left-color: #3498db;
+    }
+
+    /* Logout specific styling */
+    .logout-link {
+      color: #e74c3c !important;
+      margin-top: auto;
+      border-top: 1px solid #34495e;
+    }
+
+    .logout-link:hover {
+      background: #e74c3c !important;
+      color: white !important;
+      border-left-color: #c0392b !important;
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 220px;
+      flex: 1;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      min-height: 100vh;
+    }
+
+    /* Cards */
+    .attendees-card {
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .attendees-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 20px;
+    }
+
+    /* Table Styling */
+    .table {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+
+    .table thead {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .table thead th {
+      border: none;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+      padding: 15px;
+    }
+
+    .table tbody td {
+      padding: 15px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f8f9fa;
+      transition: background-color 0.2s ease;
+    }
+
+    .table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Search & Filter */
+    .search-section {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .form-control {
+      border-radius: 15px;
+      border: 2px solid #e9ecef;
+      padding: 12px 20px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 15px;
+      padding: 12px 25px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Stats Cards */
+    .stats-card {
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+      border: none;
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      margin-bottom: 30px;
+    }
+
+    .stats-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .stats-label {
+      color: #6c757d;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Employee Avatar Styling */
+    .employee-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+
+    .employee-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 20px 20px 0 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+
+      #sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .stats-number {
+        font-size: 2rem;
+      }
+
+      .table-responsive {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <a href="{{ url_for('user_dashboard') }}">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('attendees') }}" class="active">
+      <i class="fas fa-users"></i>
+      <span>Attendees</span>
+    </a>
+    <a href="{{ url_for('user_details') }}">
+      <i class="fas fa-file-upload"></i>
+      <span>Update Details</span>
+    </a>
+    <a href="{{ url_for('timesheet') }}">
+      <i class="fas fa-clock"></i>
+      <span>Timesheet</span>
+    </a>
+
+    <!-- Settings Section -->
+    <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #34495e;">
+      <a href="#" onclick="openResetModal()">
+        <i class="fas fa-key"></i>
+        <span>Change Password</span>
+      </a>
+      <a href="{{ url_for('logout') }}" onclick="return confirmLogout()" class="logout-link">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container-fluid">
+
+      <h2 class="mb-4">
+        <i class="fas fa-users text-primary"></i> Team Members
+      </h2>
+
+      <!-- Quick Stats -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+          <div class="stats-card">
+            <div class="stats-number">{{ total_employees or 0 }}</div>
+            <div class="stats-label">Total Employees</div>
+            <small class="text-muted">Active Members</small>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="stats-card">
+            <div class="stats-number">{{ it_employees or 0 }}</div>
+            <div class="stats-label">IT Department</div>
+            <small class="text-muted">Tech Team</small>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="stats-card">
+            <div class="stats-number">{{ hr_employees or 0 }}</div>
+            <div class="stats-label">HR Department</div>
+            <small class="text-muted">Human Resources</small>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="stats-card">
+            <div class="stats-number">{{ new_joiners or 0 }}</div>
+            <div class="stats-label">New Joiners</div>
+            <small class="text-muted">Last 3 months</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-section">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-0">
+                <i class="fas fa-search text-muted"></i>
+              </span>
+              <input type="text" class="form-control border-start-0" id="searchInput"
+                     placeholder="Search by name, email, or department..." onkeyup="filterEmployees()">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" id="departmentFilter" onchange="filterEmployees()">
+              <option value="">All Departments</option>
+              <option value="IT">IT</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Sales">Sales</option>
+              <option value="Operations">Operations</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendees Table -->
+      <div class="attendees-card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-users"></i> Employee Directory
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover" id="employeesTable">
+              <thead>
+                <tr>
+                  <th><i class="fas fa-user me-2"></i>Name</th>
+                  <th><i class="fas fa-envelope me-2"></i>Email</th>
+                  <th><i class="fas fa-id-badge me-2"></i>Employee ID</th>
+                  <th><i class="fas fa-building me-2"></i>Department</th>
+                  <th><i class="fas fa-calendar-alt me-2"></i>Join Date</th>
+                  <th><i class="fa-solid fa-indian-rupee-sign me-2"></i>Salary</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for attendee in attendees %}
+                <tr class="employee-row" data-name="{{ attendee.name|lower }}"
+                    data-email="{{ attendee.email|lower }}" data-dept="{{ attendee.department|lower }}">
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="employee-avatar me-3">
+                        {% if attendee.image_file_id %}
+                          <img src="{{ url_for('serve_file', file_id=attendee.image_file_id) }}"
+                               alt="{{ attendee.name }}" />
+                        {% else %}
+                          <img src="{{ url_for('static', filename='default-profile.png') }}"
+                               alt="Default Profile" />
+                        {% endif %}
+                      </div>
+                      <div>
+                        <div class="fw-bold">{{ attendee.name }}</div>
+                        <small class="text-muted">{{ attendee.department }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <a href="mailto:{{ attendee.email }}" class="text-decoration-none">
+                      {{ attendee.email }}
+                    </a>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">{{ attendee.emp_id }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                      {{ attendee.department }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if attendee.join_date %}
+                      {{ attendee.join_date.strftime('%d %b %Y') }}
+                    {% else %}
+                      <span class="text-muted">Not specified</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <strong>₹{{ "{:,.0f}".format(attendee.salary) }}</strong>
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-5">
+                    <i class="fas fa-users fa-3x mb-3 text-muted"></i>
+                    <h5>No employees found</h5>
+                    <p>There are no team members to display at the moment.</p>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back to Dashboard Button -->
+      <div class="text-center mt-4">
+        <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+          <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Change Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="passwordResetForm">
+            <div class="mb-3">
+              <label class="form-label">Current Password</label>
+              <input type="password" class="form-control" name="current_password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">New Password</label>
+              <input type="password" class="form-control" name="new_password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" name="confirm_password" required>
+            </div>
+            <div id="resetMsg"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitPasswordChange()">Change Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    // Mobile sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('show');
+    }
+
+    // Password reset modal
+    function openResetModal() {
+      const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+      modal.show();
+    }
+
+    function submitPasswordChange() {
+      const form = document.getElementById('passwordResetForm');
+      const formData = new FormData(form);
+
+      const data = {
+        current_password: formData.get('current_password'),
+        new_password: formData.get('new_password'),
+        confirm_password: formData.get('confirm_password')
+      };
+
+      if (data.new_password !== data.confirm_password) {
+        document.getElementById('resetMsg').innerHTML = '<div class="alert alert-danger">Passwords do not match!</div>';
+        return;
+      }
+
+      fetch('/api/change_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(async (response) => {
+        const result = await response.json();
+        const msgDiv = document.getElementById('resetMsg');
+
+        if (response.ok) {
+          msgDiv.innerHTML = '<div class="alert alert-success">' + result.message + '</div>';
+          form.reset();
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal')).hide();
+          }, 2000);
+        } else {
+          msgDiv.innerHTML = '<div class="alert alert-danger">' + (result.message || 'Error occurred') + '</div>';
+        }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        document.getElementById('resetMsg').innerHTML = '<div class="alert alert-danger">An unexpected error occurred.</div>';
+      });
+    }
+
+    // Logout confirmation
+    function confirmLogout() {
+      return confirm('Are you sure you want to logout?');
+    }
+
+    // Filter employees
+    function filterEmployees() {
+      const searchInput = document.getElementById('searchInput').value.toLowerCase();
+      const deptFilter = document.getElementById('departmentFilter').value.toLowerCase();
+      const rows = document.querySelectorAll('.employee-row');
+
+      rows.forEach(row => {
+        const name = row.dataset.name;
+        const email = row.dataset.email;
+        const dept = row.dataset.dept;
+
+        const matchesSearch = name.includes(searchInput) || email.includes(searchInput);
+        const matchesDept = deptFilter === '' || dept.includes(deptFilter);
+
+        if (matchesSearch && matchesDept) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    // Add mobile menu button if needed
+    if (window.innerWidth <= 768) {
+      const header = document.createElement('div');
+      header.innerHTML = `
+        <button class="btn btn-primary d-md-none" onclick="toggleSidebar()" style="position: fixed; top: 10px; left: 10px; z-index: 1002;">
+          <i class="fas fa-bars"></i>
+        </button>
+      `;
+      document.body.appendChild(header);
+    }
+  </script>
+
+</body>
+</html>

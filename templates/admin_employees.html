@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employee Documents - Admin</title>
+
+  <!-- Bootstrap CSS & JS Bundle -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <!-- Axios for API calls -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 220px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      position: fixed;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: 1001;
+      transition: transform 0.3s ease;
+    }
+
+    #sidebar a {
+      color: #bdc3c7;
+      text-decoration: none;
+      padding: 15px 25px;
+      display: flex;
+      align-items: center;
+      border-left: 3px solid transparent;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+
+    #sidebar a i {
+      margin-right: 12px;
+      font-size: 18px;
+      min-width: 18px;
+    }
+
+    #sidebar a.active, #sidebar a:hover {
+      background: #34495e;
+      color: #fff;
+      border-left-color: #3498db;
+    }
+
+    /* Logout specific styling */
+    .logout-link {
+      color: #e74c3c !important;
+      margin-top: auto;
+      border-top: 1px solid #34495e;
+    }
+
+    .logout-link:hover {
+      background: #e74c3c !important;
+      color: white !important;
+      border-left-color: #c0392b !important;
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 220px;
+      flex: 1;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      min-height: 100vh;
+    }
+
+    /* Page Header */
+    .page-header {
+      background: linear-gradient(145deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .page-title {
+      font-size: 2.2rem;
+      font-weight: bold;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      margin-bottom: 10px;
+    }
+
+    .page-subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    /* Search Section */
+    .search-section {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .form-control {
+      border-radius: 15px;
+      border: 2px solid #e9ecef;
+      padding: 12px 20px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    /* Employee Cards */
+    .employee-card {
+      margin-bottom: 20px;
+    }
+
+    .employee-item {
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    .employee-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+      border: 2px solid #667eea;
+    }
+
+    .employee-avatar img {
+      border: 3px solid #f0f0f0;
+      transition: all 0.3s ease;
+    }
+
+    .employee-avatar div {
+      background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    }
+
+    .card-title {
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    .badge.bg-success {
+      background: linear-gradient(135deg, #198754, #20c997) !important;
+    }
+
+    .badge.bg-secondary {
+      background: linear-gradient(135deg, #6c757d, #adb5bd) !important;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 20px 20px 0 0;
+      border-bottom: none;
+    }
+
+    .modal-title {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .btn-close-white {
+      filter: brightness(0) invert(1);
+    }
+
+    .border-bottom {
+      border-bottom: 2px solid #f0f0f0 !important;
+    }
+
+    #profileImageContainer img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      border: 3px solid #ffffff;
+    }
+
+    .file-placeholder {
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 15px;
+      text-align: center;
+      color: #6c757d;
+      border: 2px dashed #ced4da;
+    }
+
+    .file-placeholder i {
+      color: #adb5bd;
+      margin-bottom: 15px;
+    }
+
+    /* Button styling */
+    .btn {
+      border-radius: 12px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 10px 20px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #dc3545, #e74c3c);
+      border: none;
+    }
+
+    .btn-outline-primary {
+      border: 2px solid #667eea;
+      color: #667eea;
+    }
+
+    .btn-outline-primary:hover {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: #667eea;
+    }
+
+    /* Stats Card */
+    .stats-badge {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 1rem;
+      padding: 10px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Loading spinner */
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+      color: #667eea;
+    }
+
+    /* No Results */
+    #noResults {
+      background: white;
+      border-radius: 20px;
+      padding: 60px 40px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    #noResults i {
+      color: #667eea;
+      opacity: 0.6;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+
+      #sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .page-title {
+        font-size: 1.8rem;
+      }
+
+      .employee-item {
+        margin-bottom: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <a href="{{ url_for('admin_dashboard') }}">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('employee_management') }}">
+      <i class="fas fa-user-plus"></i>
+      <span>Employees</span>
+    </a>
+    <a href="{{ url_for('user_management') }}">
+      <i class="fas fa-user-cog"></i>
+      <span>Users</span>
+    </a>
+    <a href="{{ url_for('admin_employees') }}" class="active">
+      <i class="fas fa-file-alt"></i>
+      <span>Documents</span>
+    </a>
+
+    <!-- Settings Section -->
+    <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #34495e;">
+      <a href="#" onclick="openResetModal()">
+        <i class="fas fa-key"></i>
+        <span>Change Password</span>
+      </a>
+      <a href="{{ url_for('logout') }}" onclick="return confirmLogout()" class="logout-link">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container-fluid">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <div class="page-title">Employee Documents</div>
+            <div class="page-subtitle">
+              View and manage employee files • {{ datetime.now().strftime('%A, %B %d, %Y') }}
+            </div>
+          </div>
+          <div class="col-md-4 text-center">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+              <i class="fas fa-file-alt" style="font-size: 2.5rem; color: white;"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="search-section">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-0">
+                <i class="fas fa-search text-muted"></i>
+              </span>
+              <input id="searchEmployees" type="text" class="form-control border-start-0"
+                     placeholder="Search employees by name or ID..." />
+            </div>
+          </div>
+          <div class="col-md-4 text-end">
+            <div class="stats-badge">
+              <i class="fas fa-users me-2"></i>Total: {{ employees|length }} Employees
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employee Cards Grid -->
+      <div class="row g-4" id="employeeGrid">
+        {% for emp in employees %}
+        <div class="col-md-6 col-lg-4 employee-card" data-name="{{ emp.name|lower }}" data-empid="{{ emp.emp_id|lower }}">
+          <div class="card employee-item" onclick="showEmployeeFiles('{{ emp.emp_id }}', '{{ emp.name }}')">
+            <div class="card-body d-flex align-items-center p-3">
+              <div class="employee-avatar me-3">
+                {% if emp.image_file_id %}
+                  <img src="{{ url_for('serve_file', file_id=emp.image_file_id) }}"
+                       alt="Profile" class="rounded-circle"
+                       style="width: 60px; height: 60px; object-fit: cover;">
+                {% else %}
+                  <div class="rounded-circle d-flex align-items-center justify-content-center"
+                       style="width: 60px; height: 60px;">
+                    <i class="fas fa-user text-white fs-4"></i>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="employee-info flex-grow-1">
+                <h6 class="card-title mb-2">{{ emp.name }}</h6>
+                <p class="card-text text-muted mb-1">
+                  <small><i class="fas fa-id-badge me-2"></i>{{ emp.emp_id }}</small>
+                </p>
+                <p class="card-text text-muted mb-0">
+                  <small><i class="fas fa-building me-2"></i>{{ emp.department }}</small>
+                </p>
+              </div>
+              <div class="employee-files text-end">
+                {% if emp.image_file_id or emp.cv_file_id or emp.other_file_id %}
+                  <span class="badge bg-success mb-2">
+                    <i class="fas fa-file-check me-1"></i>Has Files
+                  </span>
+                {% else %}
+                  <span class="badge bg-secondary mb-2">
+                    <i class="fas fa-file-times me-1"></i>No Files
+                  </span>
+                {% endif %}
+                <div><small class="text-muted">Click to view</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- No Results Message -->
+      <div id="noResults" class="mt-5" style="display: none;">
+        <i class="fas fa-search display-1 mb-4"></i>
+        <h4 class="text-muted mb-3">No employees found</h4>
+        <p class="text-muted">Try adjusting your search criteria</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Employee Files Modal -->
+  <div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="filesModalLabel">
+            <i class="fas fa-file-alt me-2"></i>Employee Files
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <!-- Loading Spinner -->
+          <div id="loadingSpinner" class="text-center py-5">
+            <div class="spinner-border mb-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted">Loading employee files...</p>
+          </div>
+
+          <!-- File Content -->
+          <div id="fileContent" style="display: none;">
+            <!-- Profile Image Section -->
+            <div class="mb-5">
+              <h6 class="border-bottom pb-3 mb-4">
+                <i class="fas fa-user-circle text-primary me-2"></i>Profile Image
+              </h6>
+              <div id="profileImageContainer" class="text-center">
+                <!-- Profile image will be loaded here -->
+              </div>
+            </div>
+
+            <!-- CV Section -->
+            <div class="mb-5">
+              <h6 class="border-bottom pb-3 mb-4">
+                <i class="fas fa-file-pdf text-danger me-2"></i>Curriculum Vitae (CV)
+              </h6>
+              <div id="cvContainer">
+                <!-- CV link will be loaded here -->
+              </div>
+            </div>
+
+            <!-- Other Documents Section -->
+            <div class="mb-4">
+              <h6 class="border-bottom pb-3 mb-4">
+                <i class="fas fa-folder text-warning me-2"></i>Other Documents
+              </h6>
+              <div id="otherDocsContainer">
+                <!-- Other documents will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Change Admin Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="passwordResetForm">
+            <div class="mb-3">
+              <label class="form-label">Current Password</label>
+              <input type="password" class="form-control" name="current_password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">New Password</label>
+              <input type="password" class="form-control" name="new_password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" name="confirm_password" required>
+            </div>
+            <div id="resetMsg"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitPasswordChange()">Change Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    let filesModal;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize modal
+      filesModal = new bootstrap.Modal(document.getElementById('filesModal'), {
+        backdrop: true,
+        keyboard: true
+      });
+
+      const profileImageContainer = document.getElementById('profileImageContainer');
+      const cvContainer = document.getElementById('cvContainer');
+      const otherDocsContainer = document.getElementById('otherDocsContainer');
+      const filesModalLabel = document.getElementById('filesModalLabel');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const fileContent = document.getElementById('fileContent');
+      const searchInput = document.getElementById('searchEmployees');
+      const noResults = document.getElementById('noResults');
+
+      // Search functionality
+      searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        const cards = document.querySelectorAll('.employee-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+          const name = card.dataset.name;
+          const empId = card.dataset.empid;
+
+          if (name.includes(query) || empId.includes(query)) {
+            card.style.display = 'block';
+            visibleCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+      });
+
+      // Global function for showing employee files
+      window.showEmployeeFiles = function(empId, empName) {
+        filesModalLabel.innerHTML = `<i class="fas fa-file-alt me-2"></i>Files for ${empName} (${empId})`;
+
+        // Show loading spinner
+        loadingSpinner.style.display = 'block';
+        fileContent.style.display = 'none';
+
+        // Clear previous content
+        profileImageContainer.innerHTML = '';
+        cvContainer.innerHTML = '';
+        otherDocsContainer.innerHTML = '';
+
+        // Show modal
+        filesModal.show();
+
+        // Fetch files from backend
+        axios.get(`/admin/employee/${empId}/files`)
+          .then(response => {
+            const files = response.data;
+
+            // Hide loading spinner
+            loadingSpinner.style.display = 'none';
+            fileContent.style.display = 'block';
+
+            // Profile Image
+            if (files.profile_image) {
+              profileImageContainer.innerHTML = `
+                <img src="${files.profile_image}" alt="Profile Image" class="img-fluid rounded mb-3">
+                <div class="mt-3">
+                  <a href="${files.profile_image}" target="_blank" class="btn btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-2"></i>Open Full Size
+                  </a>
+                </div>
+              `;
+            } else {
+              profileImageContainer.innerHTML = `
+                <div class="file-placeholder">
+                  <i class="fas fa-user-slash display-4"></i>
+                  <p class="mb-0 mt-3">No profile image uploaded</p>
+                </div>
+              `;
+            }
+
+            // CV
+            if (files.cv) {
+              cvContainer.innerHTML = `
+                <div class="d-flex gap-3 flex-wrap justify-content-center">
+                  <a href="${files.cv}" target="_blank" class="btn btn-danger">
+                    <i class="fas fa-file-pdf me-2"></i>View CV
+                  </a>
+                  <a href="${files.cv}" download class="btn btn-outline-danger">
+                    <i class="fas fa-download me-2"></i>Download CV
+                  </a>
+                </div>
+              `;
+            } else {
+              cvContainer.innerHTML = `
+                <div class="file-placeholder">
+                  <i class="fas fa-file-times display-4"></i>
+                  <p class="mb-0 mt-3">No CV uploaded</p>
+                </div>
+              `;
+            }
+
+            // Other Documents
+            if (files.other_documents && files.other_documents.length > 0) {
+              let docsHtml = '<div class="d-flex flex-wrap gap-3 justify-content-center">';
+              files.other_documents.forEach((doc, index) => {
+                docsHtml += `
+                  <a href="${doc.url}" target="_blank" class="btn btn-outline-secondary">
+                    <i class="fas fa-file me-2"></i>Document ${index + 1}
+                  </a>
+                `;
+              });
+              docsHtml += '</div>';
+              otherDocsContainer.innerHTML = docsHtml;
+            } else {
+              otherDocsContainer.innerHTML = `
+                <div class="file-placeholder">
+                  <i class="fas fa-folder-open display-4"></i>
+                  <p class="mb-0 mt-3">No other documents uploaded</p>
+                </div>
+              `;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            loadingSpinner.style.display = 'none';
+            fileContent.style.display = 'block';
+
+            profileImageContainer.innerHTML = `
+              <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>Failed to load files
+              </div>
+            `;
+            cvContainer.innerHTML = '';
+            otherDocsContainer.innerHTML = '';
+          });
+      };
+    });
+
+    // Password reset modal functions
+    function openResetModal() {
+      const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+      modal.show();
+    }
+
+    function submitPasswordChange() {
+      const form = document.getElementById('passwordResetForm');
+      const formData = new FormData(form);
+
+      const data = {
+        current_password: formData.get('current_password'),
+        new_password: formData.get('new_password'),
+        confirm_password: formData.get('confirm_password')
+      };
+
+      if (data.new_password !== data.confirm_password) {
+        document.getElementById('resetMsg').innerHTML = '<div class="alert alert-danger">Passwords do not match!</div>';
+        return;
+      }
+
+      fetch('/api/change_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(async (response) => {
+        const result = await response.json();
+        const msgDiv = document.getElementById('resetMsg');
+
+        if (response.ok) {
+          msgDiv.innerHTML = '<div class="alert alert-success">' + result.message + '</div>';
+          form.reset();
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal')).hide();
+          }, 2000);
+        } else {
+          msgDiv.innerHTML = '<div class="alert alert-danger">' + (result.message || 'Error occurred') + '</div>';
+        }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        document.getElementById('resetMsg').innerHTML = '<div class="alert alert-danger">An unexpected error occurred.</div>';
+      });
+    }
+
+    // Logout confirmation
+    function confirmLogout() {
+      return confirm('Are you sure you want to logout?');
+    }
+
+    // Mobile menu toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('show');
+    }
+
+    // Add mobile menu button if needed
+    if (window.innerWidth <= 768) {
+      const header = document.createElement('div');
+      header.innerHTML = `
+        <button class="btn btn-primary d-md-none" onclick="toggleSidebar()" style="position: fixed; top: 10px; left: 10px; z-index: 1002;">
+          <i class="fas fa-bars"></i>
+        </button>
+      `;
+      document.body.appendChild(header);
+    }
+  </script>
+
+</body>
+</html>
