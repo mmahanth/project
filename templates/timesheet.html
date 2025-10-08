@@ -683,7 +683,7 @@
                       <td><strong>{{ timesheet.total_hours or '0.0' }}h</strong></td>
                       <td>{{ timesheet.project_name or 'General' }}</td>
                       <td>
-                        <span class="badge bg-{{ 'success' if timesheet.status == 'completed' else 'warning' }}">
+                        <span class="badge bg-{{ 'success' if timesheet.status == 'pending_approval' else 'warning' }}">
                           {{ timesheet.status.title() }}
                         </span>
                       </td>
@@ -967,7 +967,7 @@
         break_duration: document.getElementById('breakDuration').value || 0,
         project_name: document.getElementById('projectName').value.trim(),
         task_description: document.getElementById('taskDescription').value.trim(),
-        status: 'completed'
+        status: 'pending_approval'
       };
 
       fetch('/api/timesheet', {
@@ -1097,7 +1097,7 @@
       break_duration: document.getElementById('editBreakDuration').value || 0,
       project_name: document.getElementById('editProjectName').value.trim(),
       task_description: document.getElementById('editTaskDescription').value.trim(),
-      status: 'completed'
+      status: 'pending_approval'
     };
 
     // Show loading state on update button
