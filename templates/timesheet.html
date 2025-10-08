@@ -179,18 +179,6 @@
       color: white;
     }
 
-    /* Month view styling */
-    .month-day {
-      padding: 10px 5px;
-      min-height: 80px;
-      font-size: 0.85rem;
-    }
-
-    .month-day .hours-display {
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-
     /* Chart styling */
     .chart-container {
       display: flex;
@@ -218,15 +206,6 @@
     .chart-bar:hover {
       background: linear-gradient(135deg, #5a67d8, #6b46c1);
       transform: translateY(-2px);
-    }
-
-    .chart-label {
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-    }
-
-    .chart-value {
-      font-weight: bold;
     }
 
     .summary-stat {
@@ -377,6 +356,39 @@
         font-size: 2rem;
       }
     }
+      .logout-link {
+  color: #e74c3c !important;
+  margin-top: auto;
+  border-top: 1px solid #34495e;
+  padding: 15px 25px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: 0.3s;
+}
+.logout-link:hover {
+  background: #e74c3c !important;
+  color: white !important;
+  border-left-color: #c0392b !important;
+}
+.logout-link i {
+  margin-right: 8px;
+}
+
+.main-content {
+  margin-left: 220px;
+  flex: 1;
+  padding: 30px;
+  background: rgba(255,255,255,0.95);
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+}
   </style>
 </head>
 <body>
@@ -399,6 +411,10 @@
       <i class="fas fa-clock"></i>
       <span>Timesheet</span>
     </a>
+      <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #34495e;">
+      <a href="#" onclick="openResetModal()"><i class="fas fa-key"></i><span>Change Password</span></a>
+      <a href="{{ url_for('logout') }}" onclick="return confirmLogout()" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+    </div>
   </nav>
 
   <!-- Main Content -->
@@ -683,9 +699,16 @@
                       <td><strong>{{ timesheet.total_hours or '0.0' }}h</strong></td>
                       <td>{{ timesheet.project_name or 'General' }}</td>
                       <td>
-                        <span class="badge bg-{{ 'success' if timesheet.status == 'completed' else 'warning' }}">
-                          {{ timesheet.status.title() }}
-                        </span>
+                        <!-- FIXED STATUS BADGE - This is the key fix -->
+                        {% if timesheet.status == 'pending_approval' %}
+                          <span class="badge bg-warning">Pending Approval</span>
+                        {% elif timesheet.status == 'approved' %}
+                          <span class="badge bg-success">Approved</span>
+                        {% elif timesheet.status == 'denied' %}
+                          <span class="badge bg-danger">Denied</span>
+                        {% else %}
+                          <span class="badge bg-secondary">{{ timesheet.status.title() }}</span>
+                        {% endif %}
                       </td>
                       {% if not period or period in ['current_week', 'current_month'] %}
                         <td>
@@ -833,9 +856,95 @@
       </div>
     </div>
   </div>
+<!-- Password Reset Modal -->
+  <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Change Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="passwordResetForm">
+            <div class="mb-3">
+              <label class="form-label">Current Password</label>
+              <input type="password" class="form-control" name="current_password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">New Password</label>
+              <input type="password" class="form-control" name="new_password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" name="confirm_password" required>
+            </div>
+            <div id="resetMsg"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitPasswordChange()">Change Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('show');
+    }
+    function openResetModal() {
+      const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+      modal.show();
+    }
+    function submitPasswordChange() {
+      const form = document.getElementById('passwordResetForm');
+      const formData = new FormData(form);
+      const data = {
+        current_password: formData.get('current_password'),
+        new_password: formData.get('new_password'),
+        confirm_password: formData.get('confirm_password')
+      };
+      if (data.new_password !== data.confirm_password) {
+        document.getElementById('resetMsg').innerHTML = '<div class="alert alert-danger">Passwords do not match!</div>';
+        return;
+      }
+      fetch('/api/change_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(async (response) => {
+        const result = await response.json();
+        const msgDiv = document.getElementById('resetMsg');
+        if (response.ok) {
+          msgDiv.innerHTML = '<div class="alert alert-success">' + result.message + '</div>';
+          form.reset();
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal')).hide();
+          }, 2000);
+        } else {
+          msgDiv.innerHTML = '<div class="alert alert-danger">' + (result.message || 'Error occurred') + '</div>';
+        }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        document.getElementById('resetMsg').innerHTML = '<div class="alert alert-danger">An unexpected error occurred.</div>';
+      });
+    }
+    function confirmLogout() {
+      return confirm('Are you sure you want to logout?');
+    }
+    if (window.innerWidth <= 768) {
+      const header = document.createElement('div');
+      header.innerHTML =
+        '<button class="btn btn-primary d-md-none" onclick="toggleSidebar()" style="position: fixed; top: 10px; left: 10px; z-index: 1002;"><i class="fas fa-bars"></i></button>';
+      document.body.appendChild(header);
+    }
+
   // Real-time clock
   function updateClock() {
     const now = new Date();
@@ -967,7 +1076,7 @@
         break_duration: document.getElementById('breakDuration').value || 0,
         project_name: document.getElementById('projectName').value.trim(),
         task_description: document.getElementById('taskDescription').value.trim(),
-        status: 'completed'
+        status: 'pending_approval'  // KEY FIX: Always send pending_approval
       };
 
       fetch('/api/timesheet', {
@@ -1096,8 +1205,8 @@
       end_time: endTime,
       break_duration: document.getElementById('editBreakDuration').value || 0,
       project_name: document.getElementById('editProjectName').value.trim(),
-      task_description: document.getElementById('editTaskDescription').value.trim(),
-      status: 'completed'
+      task_description: document.getElementById('editTaskDescription').value.trim()
+      // Don't change status when editing - let it remain as is
     };
 
     // Show loading state on update button
@@ -1222,113 +1331,6 @@
     `;
     document.body.appendChild(header);
   }
-
-  // Period navigation with keyboard shortcuts
-  document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey || e.metaKey) {
-      switch(e.key) {
-        case '1':
-          e.preventDefault();
-          window.location.href = "{{ url_for('timesheet', period='current_week') }}";
-          break;
-        case '2':
-          e.preventDefault();
-          window.location.href = "{{ url_for('timesheet', period='last_week') }}";
-          break;
-        case '3':
-          e.preventDefault();
-          window.location.href = "{{ url_for('timesheet', period='current_month') }}";
-          break;
-        case '4':
-          e.preventDefault();
-          window.location.href = "{{ url_for('timesheet', period='last_month') }}";
-          break;
-        case 's':
-          e.preventDefault();
-          if (timesheetForm) {
-            timesheetForm.dispatchEvent(new Event('submit'));
-          }
-          break;
-      }
-    }
-
-    // Escape to close modal
-    if (e.key === 'Escape') {
-      const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
-      if (modal) {
-        modal.hide();
-      }
-    }
-  });
-
-  // Auto-save draft functionality (optional)
-  let draftSaveTimeout;
-  const formInputs = ['startTime', 'endTime', 'breakDuration', 'projectName', 'taskDescription'];
-
-  formInputs.forEach(inputId => {
-    const element = document.getElementById(inputId);
-    if (element) {
-      element.addEventListener('input', function() {
-        clearTimeout(draftSaveTimeout);
-        draftSaveTimeout = setTimeout(saveDraft, 2000); // Save draft after 2 seconds of inactivity
-      });
-    }
-  });
-
-  function saveDraft() {
-    const entryDate = document.getElementById('entryDate');
-    const startTime = document.getElementById('startTime');
-    const endTime = document.getElementById('endTime');
-    const breakDuration = document.getElementById('breakDuration');
-    const projectName = document.getElementById('projectName');
-    const taskDescription = document.getElementById('taskDescription');
-
-    if (entryDate && startTime && endTime && breakDuration && projectName && taskDescription) {
-      const draftData = {
-        date: entryDate.value,
-        start_time: startTime.value,
-        end_time: endTime.value,
-        break_duration: breakDuration.value,
-        project_name: projectName.value,
-        task_description: taskDescription.value
-      };
-
-      localStorage.setItem('timesheet_draft', JSON.stringify(draftData));
-    }
-  }
-
-  function loadDraft() {
-    const draftData = localStorage.getItem('timesheet_draft');
-    if (draftData) {
-      try {
-        const data = JSON.parse(draftData);
-        // Only load if the draft is for today
-        if (data.date === new Date().toISOString().split('T')[0]) {
-          const startTime = document.getElementById('startTime');
-          const endTime = document.getElementById('endTime');
-          const breakDuration = document.getElementById('breakDuration');
-          const projectName = document.getElementById('projectName');
-          const taskDescription = document.getElementById('taskDescription');
-
-          if (data.start_time && startTime) startTime.value = data.start_time;
-          if (data.end_time && endTime) endTime.value = data.end_time;
-          if (data.break_duration && breakDuration) breakDuration.value = data.break_duration;
-          if (data.project_name && projectName) projectName.value = data.project_name;
-          if (data.task_description && taskDescription) taskDescription.value = data.task_description;
-        }
-      } catch (e) {
-        console.log('Failed to load draft data');
-      }
-    }
-  }
-
-  // Load draft on page load
-  loadDraft();
-
-  // Clear draft after successful submission
-  document.addEventListener('timesheetSaved', function() {
-    localStorage.removeItem('timesheet_draft');
-  });
 </script>
 </body>
 </html>
