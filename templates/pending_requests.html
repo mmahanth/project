@@ -95,6 +95,7 @@
   <a href="{{ url_for('manager_dashboard') }}"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
   <a href="{{ url_for('team_employees') }}"><i class="fas fa-users"></i><span>Team Members</span></a>
   <a href="{{ url_for('pending_requests') }}" class="active"><i class="fas fa-tasks"></i><span>Requests</span></a>
+  <a href="{{ url_for('manager_leave_requests') }}"><i class="fas fa-file-alt"></i><span>Leave Approvals</span></a>
   <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #34495e;">
     <a href="#" onclick="openResetModal()"><i class="fas fa-key"></i><span>Change Password</span></a>
     <a href="{{ url_for('logout') }}" onclick="return confirmLogout()" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>

@@ -6,9 +6,11 @@ from werkzeug.utils import secure_filename
 from pymongo import MongoClient
 import gridfs
 from bson import ObjectId
+from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import wraps
 import urllib.parse
+
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"
@@ -35,6 +37,7 @@ fs = gridfs.GridFS(mongo_db)
 # ------------------- Models -------------------
 class Employee(db.Model):
     __tablename__ = "employees"
+
     id = db.Column(db.Integer, primary_key=True)
     emp_id = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -43,9 +46,13 @@ class Employee(db.Model):
     department = db.Column(db.String(50), nullable=False)
     join_date = db.Column(db.Date, nullable=True)
     manager_id = db.Column(db.Integer, db.ForeignKey('manager.id'), nullable=True)
+
     image_file_id = db.Column(db.String(24), nullable=True)
     cv_file_id = db.Column(db.String(24), nullable=True)
     other_file_id = db.Column(db.String(24), nullable=True)
+
+    # Relationship to Manager
+    manager = db.relationship("Manager", backref="team_members", foreign_keys=[manager_id])
 
     def to_dict(self):
         return {
@@ -57,6 +64,7 @@ class Employee(db.Model):
             "department": self.department,
             "join_date": self.join_date.strftime("%d-%m-%Y") if self.join_date else None,
             "manager_id": self.manager_id,
+            "manager_name": self.manager.name if self.manager else None,
             "image_file_id": self.image_file_id,
             "cv_file_id": self.cv_file_id,
             "other_file_id": self.other_file_id,
@@ -89,6 +97,8 @@ class Manager(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     emp_id = db.Column(db.String(20), nullable=False, unique=True)
     name = db.Column(db.String(100), nullable=False)
+
+    leave_requests = db.relationship('LeaveRequest', back_populates='manager')
 
     def to_dict(self):
         return {
@@ -130,6 +140,40 @@ class Timesheet(db.Model):
             "status": self.status,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S") if self.created_at else None,
             "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M:%S") if self.updated_at else None,
+        }
+
+class LeaveRequest(db.Model):
+    __tablename__ = "leave_requests"
+    id = db.Column(db.Integer, primary_key=True)
+    emp_id = db.Column(db.String(20), db.ForeignKey("employees.emp_id"), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    leave_type = db.Column(db.String(50), nullable=False)  # e.g., Sick, Casual, Paid
+    reason = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default="pending")  # pending, approved, denied
+    requested_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    reviewed_by = db.Column(db.Integer, db.ForeignKey("manager.id"), nullable=True)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    review_remark = db.Column(db.Text, nullable=True)
+
+    employee = db.relationship('Employee', backref='leave_requests', foreign_keys=[emp_id])
+    manager = db.relationship('Manager', back_populates='leave_requests', foreign_keys=[reviewed_by])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "emp_id": self.emp_id,
+            "start_date": self.start_date.strftime("%Y-%m-%d") if self.start_date else None,
+            "end_date": self.end_date.strftime("%Y-%m-%d") if self.end_date else None,
+            "leave_type": self.leave_type,
+            "reason": self.reason,
+            "status": self.status,
+            "requested_at": self.requested_at.strftime("%Y-%m-%d %H:%M:%S") if self.requested_at else None,
+            "reviewed_by": self.reviewed_by,
+            "reviewed_by_name": self.manager.name if self.manager else None,  # <-- This shows manager's name
+            "reviewed_at": self.reviewed_at.strftime("%Y-%m-%d %H:%M:%S") if self.reviewed_at else None,
+            "review_remark": self.review_remark,
         }
 
 
@@ -977,6 +1021,120 @@ def delete_timesheet(timesheet_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": f"Error deleting timesheet: {str(e)}"}), 500
+
+
+
+# --------------------- leave ---------------
+def get_quarter(month):
+    return (month - 1) // 3 + 1
+
+@app.route("/leave/apply", methods=["GET", "POST"])
+@login_required
+def leave_apply():
+    emp_id = session.get("emp_id")
+
+    if request.method == "POST":
+        start_date = request.form["start_date"]
+        end_date = request.form["end_date"]
+        leave_type = request.form["leave_type"]
+        reason = request.form.get("reason")
+
+        new_leave = LeaveRequest(
+            emp_id=emp_id,
+            start_date=start_date,
+            end_date=end_date,
+            leave_type=leave_type,
+            reason=reason
+        )
+        db.session.add(new_leave)
+        db.session.commit()
+        return redirect(url_for("leave_apply"))
+
+    # GET request processing:
+    leave_requests = LeaveRequest.query.filter_by(emp_id=emp_id).all()
+
+    # Quarterly summary calculation
+    count_by_type = defaultdict(int)
+    now = datetime.utcnow()
+    current_quarter = get_quarter(now.month)
+    current_year = now.year
+
+    for leave in leave_requests:
+        if leave.start_date.year == current_year and get_quarter(leave.start_date.month) == current_quarter:
+            days = (leave.end_date - leave.start_date).days + 1
+            count_by_type[leave.leave_type] += days
+
+    return render_template(
+        "leave_apply.html",
+        leave_requests=leave_requests,
+        quarterly_leave_summary=count_by_type
+    )
+
+@app.route('/manager/leave-requests')
+@login_required
+@roles_required('manager')
+def manager_leave_requests():
+    manager_emp_id = session.get('emp_id')
+    # Find Manager by emp_id (string)
+    manager = Manager.query.filter_by(emp_id=manager_emp_id).first()
+    if not manager:
+        abort(404)
+
+    # Get all employees managed by this manager (filter by manager.id integer)
+    team_employees = Employee.query.filter_by(manager_id=manager.id).all()
+    team_emp_ids = [e.emp_id for e in team_employees]
+
+    # Get pending leave requests for team employees
+    pending_leaves = LeaveRequest.query.filter(
+        LeaveRequest.emp_id.in_(team_emp_ids),
+        LeaveRequest.status == 'pending'
+    ).all()
+    return render_template('manager_leave_requests.html', leave_requests=pending_leaves)
+
+
+@app.route('/manager/leave-request/<int:leave_id>/process', methods=['POST'])
+@login_required
+@roles_required('manager')
+def process_leave_request(leave_id):
+    action = request.form.get('action')
+    remark = request.form.get('remark')
+    leave = LeaveRequest.query.get_or_404(leave_id)
+
+    manager_emp_id = session.get('emp_id')
+    manager = Manager.query.filter_by(emp_id=manager_emp_id).first()
+    if not manager:
+        abort(400, "Manager not found")
+
+    leave.status = 'approved' if action == 'approve' else 'denied'
+    leave.reviewed_by = manager.id
+    leave.reviewed_at = datetime.utcnow()
+    leave.review_remark = remark
+
+    db.session.commit()
+    flash(f'Leave request {leave.status}.', 'success')
+    return redirect(url_for('manager_leave_requests'))
+
+#--------------test------------------------
+@app.route('/manager_details')
+@login_required
+@roles_required('manager')
+def manager_details():
+    manager_emp_id = session.get('emp_id')
+    # Fetch the employee record (where files are stored)
+    employee = Employee.query.filter_by(emp_id=manager_emp_id).first()
+    # Fetch the manager record if you need manager-specific fields (optional)
+    manager = Manager.query.filter_by(emp_id=manager_emp_id).first()
+
+    if not employee:
+        flash('Employee record not found', 'error')
+        return redirect(url_for('login_page'))
+
+    # Pass both variables to template
+    return render_template(
+        'manager_details.html',
+        employee=employee,
+        manager=employee  # employee contains file IDs for preview
+    )
 
 
 # ------------------- Run -------------------
